@@ -1,6 +1,7 @@
 const express = require('express')
 const exphbs = require('express-handlebars')
 const Handlebars = require('handlebars')
+
 const app = express();
 const mongoose = require('mongoose')
 const bodyParser = require('body-parser')
@@ -13,12 +14,40 @@ const {allowInsecurePrototypeAccess} = require('@handlebars/allow-prototype-acce
 const flash = require('connect-flash')
 const session = require('express-session')
 const cookieParser = require("cookie-parser")
+const {request, response} = require("express");
+
+const passport = require('passport')
 
 //Flash Middleware
 
 app.use(cookieParser("passporttutorial"))
-app.use(session({cookie: {maxAge: 6000}, resave: true, secret: "passporttutorial", saveUninitialized: true}))
+app.use(session({
+    cookie: {maxAge: 6000},
+    resave: true,
+    secret: "passporttutorial",
+    saveUninitialized: true
+}))
 app.use(flash());
+
+//Passport Initialize
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+//Global - Res.Locals
+
+app.use((request, response, next) => {
+
+    response.locals.flashSuccess = request.flash("flashSuccess");
+    response.locals.flashError = request.flash("flashError");
+
+    response.locals.passportFailure = request.flash("error");
+    response.locals.passportSuccess = request.flash("success");
+
+    //Our Logged In User
+    response.locals.user = request.user;
+    next();
+});
 
 //MongoDb Connection
 const ConnectionURL = "mongodb://localhost:27017/?readPreference=primary&appname=MongoDB%20Compass&directConnection=true&ssl=false"
